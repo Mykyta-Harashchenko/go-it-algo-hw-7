@@ -64,8 +64,7 @@ class Record:
                 return p
         return None
 
-    def add_birthday(self, birthday):
-        self.birthday = Birthday(birthday)
+
 
     def __str__(self):
         phones_str = '; '.join(str(phone) for phone in self.phones)
@@ -82,6 +81,9 @@ class AddressBook(UserDict):
 
     def delete(self, name):
         del self.data[name]
+
+    def add_birthday(self, birthday):
+        self.birthday = Birthday(birthday)
 
     def find_next_birthday(self, weekday):
         pass
@@ -103,24 +105,27 @@ def input_error(func):
 
 @input_error
 def add_contact(args, book: AddressBook):
-    name, phone, = args
+    if len(args) < 2:
+        return "Insufficient arguments. Required: name and phone number."
+    name, phone = args[:2]
     record = book.find(name)
     message = "Contact updated."
     if record is None:
         record = Record(name)
         book.add_record(record)
         message = "Contact added."
-    if phone:
-        record.add_phone(phone)
+    record.add_phone(phone)
     return message
 
 
 @input_error
 def change_contact(args, book: AddressBook):
-    name, new_phone = args
+    if len(args) < 2:
+        return "Insufficient arguments. Required: name and new phone number."
+    name, new_phone = args[:2]
     record = book.find(name)
     if record:
-        record.add_phone(new_phone)
+        record.edit_phone(new_phone)
         return "Phone number updated successfully."
     else:
         raise KeyError("Contact not found.")
@@ -128,6 +133,8 @@ def change_contact(args, book: AddressBook):
 
 @input_error
 def show_phones(args, book: AddressBook):
+    if not args:
+        return "Insufficient arguments. Required: name."
     name = args[0]
     record = book.find(name)
     if record:
@@ -143,7 +150,9 @@ def show_all(book: AddressBook):
 
 @input_error
 def add_birthday(args, book: AddressBook):
-    name, birthday = args
+    if len(args) < 2:
+        return "Insufficient arguments. Required: name and birthday."
+    name, birthday = args[:2]
     record = book.find(name)
     if record:
         record.add_birthday(birthday)
@@ -169,8 +178,9 @@ def birthdays(args, book: AddressBook):
 
 
 def parse_input(user_input):
-    cmd, *args = user_input.split()
-    cmd = cmd.strip().lower()
+    parts = user_input.split()
+    cmd = parts[0].strip().lower() if parts else ""
+    args = parts[1:] if len(parts) > 1 else []
     return cmd, args
 
 
@@ -179,7 +189,7 @@ def main():
     print("Welcome to the address book bot!")
     while True:
         user_input = input("Enter a command: ")
-        command, *args = parse_input(user_input)
+        command, args = parse_input(user_input)
 
         if command in ["close", "exit"]:
             print("Good bye!")
@@ -195,21 +205,16 @@ def main():
             print(change_contact(args, book))
 
         elif command == "phone":
-            print
-
-        elif command == "phone":
             print(show_phones(args, book))
-
 
         elif command == "all":
            print(show_all(args, book))
-
 
         elif command == "add-birthday":
             print(add_birthday(args, book))
 
         elif command == "show-birthday":
-            print(show_birthdays(args, book))
+            print(show_birthday(args, book))
 
         elif command == "birthdays":
             # реалізація
