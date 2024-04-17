@@ -64,6 +64,9 @@ class Record:
                 return p
         return None
 
+    def add_birthday(self, birthday):
+        self.birthday = Birthday(birthday)
+
 
 
     def __str__(self):
@@ -82,14 +85,31 @@ class AddressBook(UserDict):
     def delete(self, name):
         del self.data[name]
 
-    def add_birthday(self, birthday):
-        self.birthday = Birthday(birthday)
-
     def find_next_birthday(self, weekday):
-        pass
+        self.today = datetime.today().date()
+        upcoming_birthdays = []
 
-    def get_upcoming_birthday(self, days=7):
-        pass
+        for user in self.data.values():
+            birthday_date = datetime.strptime(user.birthday.value, "%d.%m.%Y").date()
+
+            birthday_this_year = datetime(self.today.year, birthday_date.month, birthday_date.day).date()
+
+            if birthday_this_year < self.today:
+                birthday_this_year = datetime(self.today.year + 1, birthday_date.month, birthday_date.day).date()
+
+            days_until_birthday = (birthday_this_year - self.today).days
+
+            if 0 <= days_until_birthday <= 7:
+                if birthday_this_year.weekday() >= 5:
+                    next_monday = self.today + timedelta(days=(7 - self.today.weekday()))
+                    congrats_date = next_monday
+                else:
+                    congrats_date = birthday_this_year
+
+                upcoming_birthdays.append(
+                    {"name": user.name.value, "congratulation_date": congrats_date.strftime("%Y.%m.%d")})
+
+        return upcoming_birthdays
 
 
 def input_error(func):
@@ -217,8 +237,7 @@ def main():
             print(show_birthday(args, book))
 
         elif command == "birthdays":
-            # реалізація
-            pass
+            print(birthdays(args, book))
 
         else:
             print("Invalid command.")
