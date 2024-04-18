@@ -35,7 +35,7 @@ class Phone(Field):
 class Birthday(Field):
     def __init__(self, value):
         try:
-            self.date = datetime.strptime(value, "%d.%m.%Y").date()
+            self.value = datetime.strptime(value, "%d.%m.%Y").date()
             super().__init__(value)
         except ValueError:
             raise ValueError('Incorrect date format, please enter in the format: dd.mm.yyyy')
@@ -57,6 +57,8 @@ class Record:
         for i, phone in enumerate(self.phones):
             if str(phone) == old_phone:
                 self.phones[i] = Phone(new_phone)
+        if str(phone) != old_phone:
+            raise ValueError("Old phone number not found in the contact's phones.")
 
     def find_phone(self, phone):
         for p in self.phones:
@@ -140,12 +142,12 @@ def add_contact(args, book: AddressBook):
 
 @input_error
 def change_contact(args, book: AddressBook):
-    if len(args) < 2:
-        return "Insufficient arguments. Required: name and new phone number."
-    name, new_phone = args[:2]
+    if len(args) < 3:
+        return "Insufficient arguments. Required: name, old phone number, and new phone number."
+    name, old_phone, new_phone = args[:3]
     record = book.find(name)
     if record:
-        record.edit_phone(new_phone)
+        record.edit_phone(old_phone, new_phone)
         return "Phone number updated successfully."
     else:
         raise KeyError("Contact not found.")
@@ -228,7 +230,7 @@ def main():
             print(show_phones(args, book))
 
         elif command == "all":
-           print(show_all(args, book))
+           print(show_all(book))
 
         elif command == "add-birthday":
             print(add_birthday(args, book))
